@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voice + Fingerprint + Face Login System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(120deg, #c3cfe2, #e2ebf0);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px 35px;
+            border-radius: 20px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(40px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        h1 {
+            margin-bottom: 25px;
+            color: #512da8;
+            font-size: 30px;
+        }
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: 0.3s ease;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus,
+        input[type="file"]:focus {
+            border-color: #7e57c2;
+            box-shadow: 0 0 5px rgba(126, 87, 194, 0.3);
+            outline: none;
+        }
+        .auth-method-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .user-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .user-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+        .user-option:hover {
+            background-color: #e3f2fd;
+        }
+        .user-option input[type="radio"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+        .user-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+        .method-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .method-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 15px 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            justify-content: center;
+            min-height: 80px;
+        }
+        .method-option:hover {
+            border-color: #7e57c2;
+            background-color: #f8f5ff;
+        }
+        .method-option input[type="radio"] {
+            margin: 0;
+            width: auto;
+        }
+        .method-option input[type="radio"]:checked + .method-label {
+            color: #512da8;
+            font-weight: bold;
+        }
+        .method-option:has(input[type="radio"]:checked) {
+            border-color: #7e57c2;
+            background-color: #f3e5f5;
+        }
+        .method-label {
+            font-size: 14px;
+            color: #666;
+            transition: color 0.3s ease;
+            text-align: center;
+        }
+        .fingerprint-section,
+        .voice-section,
+        .face-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+        .voice-controls,
+        .face-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        .record-btn,
+        .capture-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .record-btn.start,
+        .capture-btn.start {
+            background: linear-gradient(to right, #e53935, #c62828);
+            color: white;
+        }
+        .record-btn.start:hover,
+        .capture-btn.start:hover {
+            background: linear-gradient(to right, #d32f2f, #b71c1c);
+            transform: scale(1.05);
+        }
+        .record-btn.stop,
+        .capture-btn.capture {
+            background: linear-gradient(to right, #43a047, #2e7d32);
+            color: white;
+        }
+        .record-btn.stop:hover,
+        .capture-btn.capture:hover {
+            background: linear-gradient(to right, #388e3c, #1b5e20);
+            transform: scale(1.05);
+        }
+        .record-btn:disabled,
+        .capture-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .recording-indicator,
+        .camera-indicator {
+            display: none;
+            color: #e53935;
+            font-weight: bold;
+            margin: 10px 0;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .recording-indicator.active,
+        .camera-indicator.active {
+            display: block;
+        }
+        .audio-preview,
+        .face-preview {
+            margin: 15px 0;
+            display: none;
+        }
+        .audio-preview.show,
+        .face-preview.show {
+            display: block;
+        }
+        .audio-preview audio {
+            width: 100%;
+            border-radius: 5px;
+        }
+        .face-preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 2px solid #7e57c2;
+        }
+        .camera-video {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            border-radius: 10px;
+            border: 2px solid #7e57c2;
+            background-color: #000;
+        }
+        .camera-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .voice-status,
+        .face-status {
+            font-size: 14px;
+            color: #666;
+            margin: 10px 0;
+        }
+        button {
+            padding: 12px 28px;
+            margin: 12px 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to right, #7e57c2, #512da8);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(to right, #673ab7, #311b92);
+            transform: scale(1.03);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .message {
+            margin-top: 25px;
+            padding: 12px;
+            border-radius: 10px;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-weight: 500;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .message.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .message.processing {
+            background-color: #fff3e0;
+            color: #f57c00;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #7e57c2;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                max-width: 90%;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .method-selection {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .method-option {
+                flex-direction: row;
+                min-height: auto;
+                padding: 12px 15px;
+            }
+            button {
+                width: 100%;
+                margin: 10px 0 0;
+            }
+            .voice-controls,
+            .face-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .record-btn,
+            .capture-btn {
+                width: 80%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Biometric Login System</h1>
+        <form id="authForm">
+            <div class="auth-method-section">
+                <h3 style="color: #512da8; margin-top: 0;">Are you a new User?</h3>
+                <div class="user-selection">
+                    <label class="user-option">
+                        <input type="radio" name="user_type" value="register" checked>
+                        <span class="user-label">New User/Register</span>
+                    </label>
+                    <label class="user-option">
+                        <input type="radio" name="user_type" value="login">
+                        <span class="user-label">Existing User/Login</span>
+                    </label>
+                </div>
+            </div>
+            <input type="text" name="username" id="username" placeholder="👤 Enter your username" required>
+            
+            <!-- Authentication Method Selection -->
+            <div class="auth-method-section">
+                <h3 style="color: #512da8; margin-top: 0;">🔐 Choose Authentication Method</h3>
+                <div class="method-selection">
+                    <label class="method-option">
+                        <input type="radio" name="auth_method" value="voice" id="voiceMethod" checked>
+                        <span class="method-label">🎤 Voice Authentication</span>
+                    </label>
+                    <label class="method-option">
+                        <input type="radio" name="auth_method" value="fingerprint" id="fingerprintMethod">
+                        <span class="method-label">👆 Fingerprint Authentication</span>
+                    </label>
+                    <label class="method-option">
+                        <input type="radio" name="auth_method" value="face" id="faceMethod">
+                        <span class="method-label">👤 Face Authentication</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Voice Authentication Section -->
+            <div class="voice-section" id="voiceSection">
+                <h3 style="color: #512da8; margin-top: 0;">🎤 Voice Authentication</h3>
+                <div class="voice-prompt" id="voicePrompt" style="background-color: #f3e5f5; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #7e57c2;">
+                    <strong>📢 Say this line:</strong><br>
+                    <span style="font-style: italic; color: #512da8; font-size: 16px;">
+                        "My name is <span id="promptName">[Enter your name above]</span> and my ID is <span id="promptId">[Enter your username above]</span>"
+                    </span>
+                </div>
+                <div class="voice-controls">
+                    <button type="button" class="record-btn start" id="startRecord">
+                        🔴 Start Recording
+                    </button>
+                    <button type="button" class="record-btn stop" id="stopRecord" disabled>
+                        ⏹️ Stop Recording
+                    </button>
+                </div>
+                <div class="recording-indicator" id="recordingIndicator">
+                    🔴 Recording... Speak now!
+                </div>
+                <div class="voice-status" id="voiceStatus">
+                    Click "Start Recording" to capture your voice sample
+                </div>
+                <div class="audio-preview" id="audioPreview">
+                    <audio controls id="audioPlayback"></audio>
+                </div>
+            </div>
+            
+            <!-- Fingerprint Authentication Section -->
+            <div class="fingerprint-section" id="fingerprintSection" style="display: none;">
+                <h3 style="color: #512da8; margin-top: 0;">👆 Fingerprint Authentication</h3>
+                <div style="background-color: #f3e5f5; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #7e57c2;">
+                    <strong>📸 Upload your fingerprint image:</strong><br>
+                    <span style="font-style: italic; color: #512da8; font-size: 14px;">
+                        Please upload a clear image of your fingerprint
+                    </span>
+                </div>
+                <input type="file" name="fingerprint" id="fingerprintInput" accept="image/jpeg,image/png">
+            </div>
+
+            <!-- Face Authentication Section -->
+            <div class="face-section" id="faceSection" style="display: none;">
+                <h3 style="color: #512da8; margin-top: 0;">👤 Face Authentication</h3>
+                <div style="background-color: #f3e5f5; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #7e57c2;">
+                    <strong>📷 Capture your face:</strong><br>
+                    <span style="font-style: italic; color: #512da8; font-size: 14px;">
+                        Position your face in the camera frame and click capture
+                    </span>
+                </div>
+                <div class="camera-container" id="cameraContainer">
+                    <video id="cameraVideo" class="camera-video" autoplay muted style="display: none;"></video>
+                    <canvas id="captureCanvas" style="display: none;"></canvas>
+                </div>
+                <div class="face-controls">
+                    <button type="button" class="capture-btn start" id="startCamera">
+                        📷 Start Camera
+                    </button>
+                    <button type="button" class="capture-btn capture" id="capturePhoto" disabled>
+                        📸 Capture Photo
+                    </button>
+                    <button type="button" class="capture-btn stop" id="stopCamera" disabled>
+                        ⏹️ Stop Camera
+                    </button>
+                </div>
+                <div class="camera-indicator" id="cameraIndicator">
+                    📷 Camera active... Position your face and click capture
+                </div>
+                <div class="face-status" id="faceStatus">
+                    Click "Start Camera" to begin face capture
+                </div>
+                <div class="face-preview" id="facePreview">
+                    <img id="capturedImage" alt="Captured face">
+                </div>
+            </div>
+            
+            <input type="hidden" name="voice_data" id="voiceData">
+            <input type="hidden" name="face_data" id="faceData">
+            
+            <button type="button" id="submitBtn">Submit</button>
+        </form>
+        <div id="message" class="message" style="display: none"></div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+        let audioBlob;
+        let isRecording = false;
+        let audioStream;
+        
+        // Face capture variables
+        let videoStream;
+        let isCameraActive = false;
+
+        const startBtn = document.getElementById('startRecord');
+        const stopBtn = document.getElementById('stopRecord');
+        const indicator = document.getElementById('recordingIndicator');
+        const status = document.getElementById('voiceStatus');
+        const preview = document.getElementById('audioPreview');
+        const playback = document.getElementById('audioPlayback');
+        const voiceDataInput = document.getElementById('voiceData');
+        
+        // Face capture elements
+        const startCameraBtn = document.getElementById('startCamera');
+        const capturePhotoBtn = document.getElementById('capturePhoto');
+        const stopCameraBtn = document.getElementById('stopCamera');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const captureCanvas = document.getElementById('captureCanvas');
+        const cameraIndicator = document.getElementById('cameraIndicator');
+        const faceStatus = document.getElementById('faceStatus');
+        const facePreview = document.getElementById('facePreview');
+        const capturedImage = document.getElementById('capturedImage');
+        const faceDataInput = document.getElementById('faceData');
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+        const voiceMethodRadio = document.getElementById('voiceMethod');
+        const fingerprintMethodRadio = document.getElementById('fingerprintMethod');
+        const faceMethodRadio = document.getElementById('faceMethod');
+        const voiceSection = document.getElementById('voiceSection');
+        const fingerprintSection = document.getElementById('fingerprintSection');
+        const faceSection = document.getElementById('faceSection');
+        const fingerprintInput = document.getElementById('fingerprintInput');
+
+        // Authentication method switching
+        function switchAuthMethod() {
+            const selectedMethod = document.querySelector('input[name="auth_method"]:checked').value;
+            
+            // Hide all sections first
+            voiceSection.style.display = 'none';
+            fingerprintSection.style.display = 'none';
+            faceSection.style.display = 'none';
+            
+            // Reset all data
+            voiceDataInput.value = '';
+            faceDataInput.value = '';
+            fingerprintInput.value = '';
+            fingerprintInput.required = false;
+            
+            // Stop any active recording or camera
+            resetVoiceRecording();
+            resetFaceCapture();
+            
+            // Show the selected section
+            switch(selectedMethod) {
+                case 'voice':
+                    voiceSection.style.display = 'block';
+                    break;
+                case 'fingerprint':
+                    fingerprintSection.style.display = 'block';
+                    fingerprintInput.required = true;
+                    enableSubmitButtons(); // Fingerprint doesn't need special validation
+                    break;
+                case 'face':
+                    faceSection.style.display = 'block';
+                    break;
+            }
+            
+            checkSubmitRequirements();
+        }
+
+        // Add event listeners for all radio buttons
+        voiceMethodRadio.addEventListener('change', switchAuthMethod);
+        fingerprintMethodRadio.addEventListener('change', switchAuthMethod);
+        faceMethodRadio.addEventListener('change', switchAuthMethod);
+
+        // Fingerprint file change handler
+        fingerprintInput.addEventListener('change', function() {
+            checkSubmitRequirements();
+        });
+
+        const userChange = document.querySelector('input[value="register"]');
+        userChange.addEventListener('change', function() {
+            checkSubmitRequirements();
+        });
+
+        function resetVoiceRecording() {
+            voiceDataInput.value = '';
+            preview.classList.remove('show');
+            status.textContent = 'Click "Start Recording" to capture your voice sample';
+            status.style.color = '#666';
+            recordedChunks = [];
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+            disableSubmitButtons();
+        }
+
+        function resetFaceCapture() {
+            faceDataInput.value = '';
+            facePreview.classList.remove('show');
+            faceStatus.textContent = 'Click "Start Camera" to begin face capture';
+            faceStatus.style.color = '#666';
+            stopCameraCapture();
+            disableSubmitButtons();
+        }
+
+        function checkSubmitRequirements() {
+            const selectedMethod = document.querySelector('input[name="auth_method"]:checked').value;
+            
+            if (selectedMethod === 'voice') {
+                if (voiceDataInput.value) {
+                    enableSubmitButtons();
+                } else {
+                    disableSubmitButtons();
+                }
+            } else if (selectedMethod === 'fingerprint') {
+                if (fingerprintInput.files.length > 0) {
+                    enableSubmitButtons();
+                } else {
+                    disableSubmitButtons();
+                }
+            } else if (selectedMethod === 'face') {
+                if (faceDataInput.value) {
+                    enableSubmitButtons();
+                } else {
+                    disableSubmitButtons();
+                }
+            }
+        }
+
+        // Face capture functionality
+        startCameraBtn.addEventListener('click', startCamera);
+        capturePhotoBtn.addEventListener('click', capturePhoto);
+        stopCameraBtn.addEventListener('click', stopCameraCapture);
+
+        async function startCamera() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                cameraVideo.srcObject = videoStream;
+                cameraVideo.style.display = 'block';
+                isCameraActive = true;
+                
+                startCameraBtn.disabled = true;
+                capturePhotoBtn.disabled = false;
+                stopCameraBtn.disabled = false;
+                cameraIndicator.classList.add('active');
+                faceStatus.textContent = 'Camera is active. Position your face and click capture';
+                faceStatus.style.color = '#2e7d32';
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                showMessage('Could not access camera. Please check permissions.', 'error');
+            }
+        }
+
+        function capturePhoto() {
+            if (!isCameraActive || !videoStream) {
+                showMessage('Camera is not active', 'error');
+                return;
+            }
+
+            const canvas = captureCanvas;
+            const context = canvas.getContext('2d');
+            
+            // Set canvas dimensions to match video
+            canvas.width = cameraVideo.videoWidth;
+            canvas.height = cameraVideo.videoHeight;
+            
+            // Draw the current frame from video to canvas
+            context.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to base64 image
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const base64Data = imageDataUrl.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+            
+            // Store the base64 data
+            faceDataInput.value = base64Data;
+            
+            // Show preview
+            capturedImage.src = imageDataUrl;
+            facePreview.classList.add('show');
+            
+            faceStatus.textContent = '✅ Face captured successfully!';
+            faceStatus.style.color = '#2e7d32';
+            
+            checkSubmitRequirements();
+        }
+
+        function stopCameraCapture() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+            
+            cameraVideo.style.display = 'none';
+            cameraVideo.srcObject = null;
+            isCameraActive = false;
+            
+            startCameraBtn.disabled = false;
+            capturePhotoBtn.disabled = true;
+            stopCameraBtn.disabled = true;
+            cameraIndicator.classList.remove('active');
+            
+            if (!faceDataInput.value) {
+                faceStatus.textContent = 'Click "Start Camera" to begin face capture';
+                faceStatus.style.color = '#666';
+            }
+        }
+
+        // Check for camera support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showMessage('Camera access is not supported in this browser', 'error');
+            startCameraBtn.disabled = true;
+            faceStatus.textContent = 'Camera not available';
+            faceStatus.style.color = '#c62828';
+        }
+
+        // Voice recording functionality
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showMessage('Voice recording is not supported in this browser', 'error');
+            disableVoiceFeatures();
+        }
+
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+
+        async function startRecording() {
+            try {
+                console.log('Starting audio recording...');
+                recordedChunks = [];
+                audioStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 16000
+                    } 
+                });
+                console.log('Audio stream started');
+                const options = {
+                    mimeType: 'audio/webm;codecs=opus'
+                };
+                
+                if (MediaRecorder.isTypeSupported('audio/wav')) {
+                    options.mimeType = 'audio/wav';
+                } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                    options.mimeType = 'audio/webm;codecs=opus';
+                } else {
+                    options.mimeType = 'audio/webm';
+                }
+                
+                mediaRecorder = new MediaRecorder(audioStream, options);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    audioBlob = new Blob(recordedChunks, { 
+                        type: mediaRecorder.mimeType 
+                    });
+                    
+                    console.log('Original blob type:', mediaRecorder.mimeType);
+                    console.log('Original blob size:', audioBlob.size);
+                    
+                    let wavBlob;
+                    if (mediaRecorder.mimeType.includes('wav')) {
+                        wavBlob = audioBlob;
+                    } else {
+                        wavBlob = await convertToWav(audioBlob);
+                    }
+                    
+                    console.log('WAV blob size:', wavBlob.size);
+                    
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    playback.src = audioUrl;
+                    preview.classList.add('show');
+                    
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result.split(',')[1];
+                        voiceDataInput.value = base64;
+                        status.textContent = '✅ Voice sample recorded successfully!';
+                        status.style.color = '#2e7d32';
+                        checkSubmitRequirements();
+                    };
+                    reader.readAsDataURL(wavBlob);
+                    
+                    audioStream.getTracks().forEach(track => track.stop());
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                indicator.classList.add('active');
+                status.textContent = 'Recording in progress... Speak clearly for 3-10 seconds';
+                status.style.color = '#e53935';
+                disableSubmitButtons();
+                
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                showMessage('Could not access microphone. Please check permissions.', 'error');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                indicator.classList.remove('active');
+            }
+        }
+
+        async function convertToWav(audioBlob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const arrayBuffer = e.target.result;
+                    
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                        sampleRate: 16000
+                    });
+                    
+                    try {
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                        const wavBuffer = audioBufferToWav(audioBuffer);
+                        const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                        
+                        audioContext.close();
+                        resolve(wavBlob);
+                    } catch (error) {
+                        console.error('Error converting to WAV:', error);
+                        resolve(audioBlob);
+                    }
+                };
+                reader.readAsArrayBuffer(audioBlob);
+            });
+        }
+
+        function audioBufferToWav(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1;
+            const bitDepth = 16;
+            
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+            
+            const audioData = [];
+            for (let channel = 0; channel < numChannels; channel++) {
+                audioData.push(buffer.getChannelData(channel));
+            }
+            
+            const interleaved = new Float32Array(buffer.length * numChannels);
+            for (let i = 0; i < buffer.length; i++) {
+                for (let channel = 0; channel < numChannels; channel++) {
+                    interleaved[i * numChannels + channel] = audioData[channel][i];
+                }
+            }
+            
+            const pcmData = new Int16Array(interleaved.length);
+            for (let i = 0; i < interleaved.length; i++) {
+                const s = Math.max(-1, Math.min(1, interleaved[i]));
+                pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            
+            const arrayBuffer = new ArrayBuffer(44 + pcmData.length * 2);
+            const view = new DataView(arrayBuffer);
+            
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + pcmData.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(36, 'data');
+            view.setUint32(40, pcmData.length * 2, true);
+            
+            const offset = 44;
+            for (let i = 0; i < pcmData.length; i++) {
+                view.setInt16(offset + i * 2, pcmData[i], true);
+            }
+            
+            return arrayBuffer;
+        }
+
+        function disableVoiceFeatures() {
+            startBtn.disabled = true;
+            stopBtn.disabled = true;
+            status.textContent = 'Voice recording not available';
+            status.style.color = '#c62828';
+        }
+
+        // Event handler for submit button
+        submitBtn.addEventListener('click', () => {
+            const isNewUser = document.querySelector('input[name="user_type"]:checked').value;
+            handleAuth(isNewUser);
+        });
+
+        // Update username display in voice prompt
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value;
+            document.getElementById('promptName').textContent = username || '[Enter your name above]';
+            document.getElementById('promptId').textContent = username || '[Enter your username above]';
+        });
+
+        async function handleAuth(selectedMode) {
+            const username = document.getElementById('username').value.trim();
+            if (!username) {    
+                showMessage('Please enter a username', 'error');
+                return;
+            }
+            
+            const selectedMethod = document.querySelector('input[name="auth_method"]:checked').value;
+            
+            showMessage(`Processing ${selectedMode}...`, 'processing');
+            disableSubmitButtons();
+
+            try {
+                let response;
+
+                if (selectedMethod === 'voice') {
+                    const voiceData = document.getElementById('voiceData').value;
+                    if (!voiceData) {
+                        showMessage('Please record your voice first', 'error');
+                        enableSubmitButtons();
+                        return;
+                    }
+                    
+                    const requestData = {
+                        username: username,
+                        auth_method: 'voice',
+                        voice_data: voiceData
+                    };
+                    
+                    response = await fetch(`/api/${selectedMode}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                } else if (selectedMethod === 'face') {
+                    const faceData = document.getElementById('faceData').value;
+                    if (!faceData) {
+                        showMessage('Please capture your face first', 'error');
+                        enableSubmitButtons();
+                        return;
+                    }
+                    
+                    const requestData = {
+                        username: username,
+                        auth_method: 'face',
+                        face_data: faceData
+                    };
+                    
+                    response = await fetch(`/api/${selectedMode}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                } else if (selectedMethod === 'fingerprint') {
+                    const fingerprintFile = document.getElementById('fingerprintInput').files[0];
+                    if (!fingerprintFile) {
+                        showMessage('Please select a fingerprint image', 'error');
+                        enableSubmitButtons();
+                        return;
+                    }
+                    
+                    // CHANGED: Use FormData to send the fingerprint file directly instead of converting to base64
+                    const formData = new FormData();
+                    formData.append('username', username);
+                    formData.append('auth_method', 'fingerprint');
+                    formData.append('fingerprint', fingerprintFile);
+
+                    // ADDED: Console logs to debug the FormData contents before sending
+                    console.log('Preparing to send FormData for fingerprint:');
+                    console.log('FormData username:', formData.get('username'));
+                    console.log('FormData auth_method:', formData.get('auth_method'));
+                    console.log('FormData fingerprint file:', formData.get('fingerprint'));
+                    console.log('Fingerprint file details:', {
+                        name: fingerprintFile.name,
+                        size: fingerprintFile.size,
+                        type: fingerprintFile.type
+                    });
+
+                    // CHANGED: Send FormData instead of JSON, removing Content-Type header to let the browser set multipart/form-data
+                    response = await fetch(`/api/${selectedMode}`, {
+                        method: 'POST',
+                        body: formData // Let the browser set Content-Type to multipart/form-data
+                    });
+                }
+
+                // ADDED: Debug response to ensure it's JSON and log any issues
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.log('Non-JSON response received:', text.slice(0, 100) + '...');
+                    throw new Error(`Expected JSON, received ${contentType || 'no content-type'}`);
+                }
+
+                // ADDED: Log the response JSON for debugging
+                const result = await response.json();
+                console.log('Response JSON:', result);
+
+                if (result.success) {
+                    showMessage(`${result.message} (Similarity: ${result.similarity || 'N/A'})`, 'success');
+                } else {
+                    showMessage(`${result.message} (Similarity: ${result.similarity || 'N/A'})`, 'error');
+                }
+                
+            } catch (error) {
+                console.error(`${selectedMode} error:`, error);
+                showMessage(`${selectedMode} failed: ${error.message}`, 'error');
+            } finally {
+                enableSubmitButtons();
+            }
+        }
+
+        // Helper function to convert file to base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // Remove the data URL prefix (data:image/jpeg;base64,)
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Update the existing showMessage function to handle different message types
+        function showMessage(text, type = 'success') {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Add loading spinner for processing messages
+            if (type === 'processing') {
+                const spinner = document.createElement('span');
+                spinner.className = 'loading-spinner';
+                messageDiv.insertBefore(spinner, messageDiv.firstChild);
+            }
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Update button state management
+        function disableSubmitButtons() {
+            submitBtn.disabled = true;
+        }
+
+        function enableSubmitButtons() {
+            submitBtn.disabled = false;
+        }
+
+        // Initialize the form
+        switchAuthMethod();
+        checkSubmitRequirements();
+    </script>
+</body>
+</html>
