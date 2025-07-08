@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAuthn Authentication</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .switch-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 10px;
+        }
+
+        .switch-btn:hover {
+            color: #764ba2;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .dashboard {
+            text-align: center;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .fingerprint-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="fingerprint-icon">🔐</div>
+        
+        <!-- Login/Register Forms -->
+        <div id="auth-forms">
+            <!-- Login Form -->
+            <div id="login-form">
+                <h1>Welcome Back</h1>
+                <div id="login-message"></div>
+                
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter your username" required>
+                </div>
+                
+                <button type="button" class="btn" onclick="login()">Sign In with WebAuthn</button>
+                <button type="button" class="switch-btn" onclick="showRegister()">Don't have an account? Register</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="hidden">
+                <h1>Create Account</h1>
+                <div id="register-message"></div>
+                
+                <div class="form-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" placeholder="Choose a username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-displayname">Display Name</label>
+                    <input type="text" id="register-displayname" placeholder="Your display name" required>
+                </div>
+                
+                <button type="button" class="btn" onclick="register()">Register with WebAuthn</button>
+                <button type="button" class="switch-btn" onclick="showLogin()">Already have an account? Sign In</button>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <h1>Welcome!</h1>
+            <div class="user-info">
+                <h3 id="user-display-name"></h3>
+                <p id="user-email"></p>
+                <p><strong>Username:</strong> <span id="user-username"></span></p>
+            </div>
+            <button type="button" class="btn" onclick="logout()">Sign Out</button>
+        </div>
+    </div>
+
+    <script>
+        // In-memory storage for demo purposes
+        let users = {};
+        let currentUser = null;
+
+        // Utility functions
+        function showMessage(elementId, message, type = 'info') {
+            const messageEl = document.getElementById(elementId);
+            messageEl.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => messageEl.innerHTML = '', 5000);
+        }
+
+        function showLogin() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+            document.getElementById('login-message').innerHTML = '';
+            document.getElementById('register-message').innerHTML = '';
+        }
+
+        function showRegister() {
+            document.getElementById('register-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('login-message').innerHTML = '';
+            document.getElementById('register-message').innerHTML = '';
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-forms').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            if (currentUser) {
+                document.getElementById('user-display-name').textContent = currentUser.displayName;
+                document.getElementById('user-email').textContent = currentUser.email;
+                document.getElementById('user-username').textContent = currentUser.username;
+            }
+        }
+
+        function hideDashboard() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('auth-forms').classList.remove('hidden');
+            showLogin();
+        }
+
+        // WebAuthn utility functions
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function generateChallenge() {
+            const array = new Uint8Array(32);
+            window.crypto.getRandomValues(array);
+            return array;
+        }
+
+        function stringToArrayBuffer(str) {
+            const encoder = new TextEncoder();
+            return encoder.encode(str);
+        }
+
+        // WebAuthn Registration
+        async function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const displayName = document.getElementById('register-displayname').value.trim();
+
+            if (!username || !email || !displayName) {
+                showMessage('register-message', 'Please fill in all fields', 'error');
+                return;
+            }
+
+            if (users[username]) {
+                showMessage('register-message', 'Username already exists', 'error');
+                return;
+            }
+
+            try {
+                const challenge = generateChallenge();
+                const userId = stringToArrayBuffer(username);
+
+                const publicKeyCredentialCreationOptions = {
+                    challenge: challenge,
+                    rp: {
+                        name: "WebAuthn Demo",
+                        id: window.location.hostname,
+                    },
+                    user: {
+                        id: userId,
+                        name: username,
+                        displayName: displayName,
+                    },
+                    pubKeyCredParams: [
+                        {
+                            alg: -7,  // ES256
+                            type: "public-key"
+                        },
+                        {
+                            alg: -257,  // RS256
+                            type: "public-key"
+                        }
+                    ],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform",
+                        userVerification: "preferred"
+                    },
+                    timeout: 60000,
+                    attestation: "direct"
+                };
+
+                showMessage('register-message', 'Please use your authenticator to register...', 'info');
+
+                const credential = await navigator.credentials.create({
+                    publicKey: publicKeyCredentialCreationOptions
+                });
+
+                // Store user data
+                users[username] = {
+                    username: username,
+                    email: email,
+                    displayName: displayName,
+                    credentialId: arrayBufferToBase64(credential.rawId),
+                    publicKey: arrayBufferToBase64(credential.response.publicKey),
+                    counter: credential.response.counter || 0
+                };
+
+                showMessage('register-message', 'Registration successful! You can now sign in.', 'success');
+                setTimeout(() => {
+                    showLogin();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                showMessage('register-message', 'Registration failed. Please try again.', 'error');
+            }
+        }
+
+        // WebAuthn Login
+        async function login() {
+            const username = document.getElementById('login-username').value.trim();
+
+            if (!username) {
+                showMessage('login-message', 'Please enter your username', 'error');
+                return;
+            }
+
+            if (!users[username]) {
+                showMessage('login-message', 'User not found. Please register first.', 'error');
+                return;
+            }
+
+            try {
+                const challenge = generateChallenge();
+                const user = users[username];
+
+                const publicKeyCredentialRequestOptions = {
+                    challenge: challenge,
+                    allowCredentials: [{
+                        id: base64ToArrayBuffer(user.credentialId),
+                        type: 'public-key',
+                    }],
+                    timeout: 60000,
+                    userVerification: "preferred"
+                };
+
+                showMessage('login-message', 'Please use your authenticator to sign in...', 'info');
+
+                const credential = await navigator.credentials.get({
+                    publicKey: publicKeyCredentialRequestOptions
+                });
+
+                // Simple verification (in production, this should be done server-side)
+                if (arrayBufferToBase64(credential.rawId) === user.credentialId) {
+                    currentUser = user;
+                    showDashboard();
+                } else {
+                    showMessage('login-message', 'Authentication failed', 'error');
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('login-message', 'Login failed. Please try again.', 'error');
+            }
+        }
+
+        // Logout
+        function logout() {
+            currentUser = null;
+            hideDashboard();
+        }
+
+        // Check WebAuthn support
+        if (!window.PublicKeyCredential) {
+            document.body.innerHTML = `
+                <div class="container">
+                    <h1>WebAuthn Not Supported</h1>
+                    <div class="message error">
+                        Your browser doesn't support WebAuthn. Please use a modern browser like Chrome, Firefox, Safari, or Edge.
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
